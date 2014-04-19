@@ -83,7 +83,7 @@ def convert_pdf_to_txt(filename):
     interpreter.process_page(page)
   fp.close()
   device.close()
-  str = retstr.getvalue()
+  str =   .getvalue()
   retstr.close()
   return str
 
@@ -93,9 +93,8 @@ def perform_count(f,bare_f,words):
     data=ifile.read().replace('\n', '').lower()
   for key in words:
     words[key] = data.count(key)
-  with open(results_dir + bare_f + ".json", 'wb') as result_file:
-    json.dump(words, result_file)
-
+  dict = words
+  return dict
 
 # Check if the list with reports and buzzwords exist.
 for f in [reports,buzzwords]:
@@ -149,7 +148,7 @@ for f in os.listdir(reports_dir):
     else:
       print "Skipped " + f + ". A cached version was found."
 
-# Create the 'words' dict and store all the buzzwords as key with empty values
+# Create a dict and store all the buzzwords as key with empty values
 with open(buzzwords, 'rb') as ifile:
   reader = csv.reader(ifile)
   # Skip first row that contains the header
@@ -168,4 +167,8 @@ for f in os.listdir(txt_dir):
   
   # Only attempt to count files
   if os.path.isfile(source):
-    perform_count(source,bare_f,words)
+    data = perform_count(source,bare_f,words)
+
+  # Store the data in a JSON file
+  with open(results_dir + bare_f + ".json", 'wb') as result_file:
+    json.dump(data, result_file)
