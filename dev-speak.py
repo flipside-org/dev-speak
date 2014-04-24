@@ -15,7 +15,7 @@
 # - Only one report per year per organization
 
 # TODO
-# - improve the count, currently only lowercasing the words and the text files
+# - only count words, when searching for 'lab', 'laborous' counts as well
 
 
 import os
@@ -23,6 +23,8 @@ import urllib
 import csv
 import sys
 import json
+import string
+from string import maketrans
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
@@ -83,14 +85,31 @@ def convert_pdf_to_txt(filename):
     interpreter.process_page(page)
   fp.close()
   device.close()
-  str =   .getvalue()
+  str = retstr.getvalue()
   retstr.close()
+  return str
+
+def clean_string(s):
+  "Clean up the strings for better counts"
+  # Lowercase
+  s = s.lower()
+  # Replace '-' and '/' for whitespace, to make sure a word like 'gender-based' is
+  # processed as 'gender based' and not 'genderbased'.
+  chars = '-/'
+  trantab = maketrans(chars, ' '*len(chars))
+  s = s.translate(trantab)
+  # Remove punctuation
+  s = s.translate(None, string.punctuation)
+  # Remove line-breaks
+  # Remove extra whitespace
+  s = " ".join(s.split())
+  str = s
   return str
 
 def perform_count(f,bare_f,words):
   "Counts the frequency of each dict key in the file. Stores the results in json."
   with open (f, "r") as ifile:
-    data=ifile.read().replace('\n', '').lower()
+    data = clean_string(ifile.read())
   for key in words:
     words[key] = data.count(key)
   dict = words
@@ -155,8 +174,9 @@ with open(buzzwords, 'rb') as ifile:
   next(reader)
   words = { }
   for row in reader:
-    word = row[0].lower()
+    word = clean_string(row[0])
     words[word] = ''
+  print words
 
 # Loop over all the text files in the cache folder and perform a count.
 for f in os.listdir(txt_dir):
